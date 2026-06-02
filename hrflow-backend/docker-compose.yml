@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  postgres:
+    container_name: postgres-hrflow
+    image: postgres:15
+    environment:
+      POSTGRES_USER: handy
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: hrflow_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  smtp4dev:
+    container_name: smtp4dev-hrflow
+    image: rnwood/smtp4dev
+    ports:
+      - "9081:80"
+      - "9025:25"
+    restart: unless-stopped
+
+volumes:
+  postgres_data: {}
