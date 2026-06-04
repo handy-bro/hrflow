@@ -1,5 +1,6 @@
 package com.hrflow.hrflow_backend.security;
 
+import com.hrflow.hrflow_backend.exceptionHandler.UserNotFoundException;
 import com.hrflow.hrflow_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +18,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found with email: " + email));
+                        new UsernameNotFoundException("User not found with email: " + email)
+                );
     }
 }

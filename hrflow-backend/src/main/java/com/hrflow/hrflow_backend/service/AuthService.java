@@ -6,12 +6,14 @@ import com.hrflow.hrflow_backend.dto.RegisterRequest;
 import com.hrflow.hrflow_backend.dto.ResendVerificationRequest;
 import com.hrflow.hrflow_backend.entity.User;
 import com.hrflow.hrflow_backend.enums.Role;
+import com.hrflow.hrflow_backend.exceptionHandler.*;
 import com.hrflow.hrflow_backend.repository.UserRepository;
 import com.hrflow.hrflow_backend.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +33,7 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new EmailAlreadyTakenException("Email already taken");
         }
 
         String verificationToken = UUID.randomUUID().toString();
@@ -57,23 +59,30 @@ public class AuthService {
 
     public AuthResponse login(LoginRequest request) {
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+        } catch (Exception e) {
+            Throwable cause = e.getCause() != null ? e.getCause() : e;
+
+            if (cause instanceof BadCredentialsException) {
+                throw new BadCredentialsException("Invalid email or password");
+            }
+            if (cause instanceof DisabledException) {
+                return AuthResponse.builder()
+                        .message("EMAIL_NOT_VERIFIED")
+                        .email(request.getEmail())
+                        .build();
+            }
+            throw new RuntimeException("Authentication failed");
+        }
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("User not found"));
-
-        if (!user.isEnabled()) {
-            return AuthResponse.builder()
-                    .message("EMAIL_NOT_VERIFIED")
-                    .email(user.getEmail())
-                    .build();
-        }
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
@@ -91,10 +100,10 @@ public class AuthService {
 
         User user = userRepository.findByVerificationToken(token)
                 .orElseThrow(() ->
-                        new RuntimeException("Invalid verification token"));
+                        new InvalidTokenException("The token is invalid"));
 
         if (user.getVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Verification token expired");
+            throw new ExpiredTokenException("The token is expired");
         }
 
         user.setEnabled(true);
@@ -112,7 +121,7 @@ public class AuthService {
 
         // Already verified
         if (user.isEnabled()) {
-            throw new RuntimeException("Account already verified. Please login.");
+            throw new AccountAlreadyVerifiedException("This account is already verified");
         }
 
         // Generate a new token
