@@ -40,6 +40,10 @@ public class User implements UserDetails {
 
     private LocalDateTime createdAt;
 
+    private String resetPasswordToken;
+
+    private LocalDateTime resetPasswordTokenExpiry;
+
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();

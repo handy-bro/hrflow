@@ -1,9 +1,6 @@
 package com.hrflow.hrflow_backend.controller;
 
-import com.hrflow.hrflow_backend.dto.AuthResponse;
-import com.hrflow.hrflow_backend.dto.LoginRequest;
-import com.hrflow.hrflow_backend.dto.RegisterRequest;
-import com.hrflow.hrflow_backend.dto.ResendVerificationRequest;
+import com.hrflow.hrflow_backend.dto.*;
 import com.hrflow.hrflow_backend.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,5 +37,17 @@ public class AuthController {
     public ResponseEntity<AuthResponse> resendVerification(
             @Valid @RequestBody ResendVerificationRequest request) {
         return ResponseEntity.ok(authService.resendVerificationEmail(request));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<AuthResponse> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(authService.forgotPassword(request));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<AuthResponse> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
+        return ResponseEntity.ok(authService.resetPassword(request));
     }
 }

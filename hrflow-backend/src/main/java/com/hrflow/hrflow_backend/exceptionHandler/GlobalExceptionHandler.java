@@ -76,4 +76,18 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.CONFLICT);
     }
+
+    @ExceptionHandler({PasswordMismatchException.class})
+    public ResponseEntity<ErrorResponse> handlePasswordMismatchException(
+            BaseException ex, WebRequest request) {
+        log.error("Password Mismatch error: {}", ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
+    }
 }

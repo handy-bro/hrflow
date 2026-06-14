@@ -1,9 +1,6 @@
 package com.hrflow.hrflow_backend.service;
 
-import com.hrflow.hrflow_backend.dto.AuthResponse;
-import com.hrflow.hrflow_backend.dto.LoginRequest;
-import com.hrflow.hrflow_backend.dto.RegisterRequest;
-import com.hrflow.hrflow_backend.dto.ResendVerificationRequest;
+import com.hrflow.hrflow_backend.dto.*;
 import com.hrflow.hrflow_backend.entity.User;
 import com.hrflow.hrflow_backend.enums.Role;
 import com.hrflow.hrflow_backend.exceptionHandler.*;
@@ -136,6 +133,61 @@ public class AuthService {
         return AuthResponse.builder()
                 .message("Verification email resent! Please check your inbox.")
                 .email(user.getEmail())
+                .build();
+    }
+
+    public AuthResponse forgotPassword(ForgotPasswordRequest request) {
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("Email not found"));
+
+        // Verify if the account is active
+        if (!user.isEnabled()) {
+            return AuthResponse.builder()
+                    .message("EMAIL_NOT_VERIFIED")
+                    .email(user.getEmail())
+                    .build();
+        }
+
+        // generate the token (expires in 1 hour)
+        String resetToken = UUID.randomUUID().toString();
+        user.setResetPasswordToken(resetToken);
+        user.setResetPasswordTokenExpiry(LocalDateTime.now().plusHours(1));
+        userRepository.save(user);
+
+        // Send the email
+        emailService.sendResetPasswordEmail(user.getEmail(), resetToken);
+
+        return AuthResponse.builder()
+                .message("Password reset email sent! Please check your inbox.")
+                .email(user.getEmail())
+                .build();
+    }
+
+    public AuthResponse resetPassword(ResetPasswordRequest request) {
+
+        // Verify if the passwords matches
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new PasswordMismatchException("Passwords do not match");
+        }
+
+        // Search the user by th token
+        User user = userRepository.findByResetPasswordToken(request.getToken())
+                .orElseThrow(() -> new InvalidTokenException("Invalid reset token"));
+
+        // Verify if token is not expired
+        if (user.getResetPasswordTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new ExpiredTokenException("Reset token has expired");
+        }
+
+        // Update password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setResetPasswordToken(null);
+        user.setResetPasswordTokenExpiry(null);
+        userRepository.save(user);
+
+        return AuthResponse.builder()
+                .message("Password reset successfully! You can now login.")
                 .build();
     }
 }

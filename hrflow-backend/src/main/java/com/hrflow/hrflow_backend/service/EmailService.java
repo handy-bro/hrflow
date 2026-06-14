@@ -24,4 +24,20 @@ public class EmailService {
         );
         javaMailSender.send(message);
     }
+
+    public void sendResetPasswordEmail(String to, String token) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("HRFlow - Reset your password");
+        message.setText(
+                "Hello,\n\n" +
+                        "You requested to reset your password.\n\n" +
+                        "Click the link below to reset it:\n\n" +
+                        "http://localhost:4200/reset-password?token=" + token + "\n\n" +
+                        "This link expires in 1 hour.\n\n" +
+                        "If you didn't request this, please ignore this email.\n\n" +
+                        "HRFlow Team"
+        );
+        javaMailSender.send(message);
+    }
 }
