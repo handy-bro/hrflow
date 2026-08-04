@@ -1,4 +1,4 @@
-package com.hrflow.hrflow_backend.dto;
+package com.hrflow.hrflow_backend.dto.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

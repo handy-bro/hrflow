@@ -40,4 +40,20 @@ public class EmailService {
         );
         javaMailSender.send(message);
     }
+
+    public void sendAccountActivationEmail(String to, String token) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("HRFlow - Activate your account");
+        message.setText(
+                "Hello,\n\n" +
+                        "You requested to activate your account.\n\n" +
+                        "Click the link below to activate it:\n\n" +
+                        "http://localhost:4200/activate-account?token=" + token + "\n\n" +
+                        "This link expires in 1 hour.\n\n" +
+                        "If you didn't request this, please ignore this email.\n\n" +
+                        "HRFlow Team"
+        );
+        javaMailSender.send(message);
+    }
 }

@@ -90,4 +90,83 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(InvalidRoleException.class)
+    public ResponseEntity<ErrorResponse> handleRoleException(
+            BaseException ex, WebRequest request) {
+        log.error("Role error: {}", ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<ErrorResponse> handleEmailNotVerifiedException(
+            EmailAlreadyTakenException ex, WebRequest request) {
+        log.error("Email not verified: {}", ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(DepartmentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleDepartmentNotFoundException(
+            DepartmentNotFoundException ex, WebRequest request) {
+        log.error("Department not found: {}", ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(StorageException.class)
+    public ResponseEntity<ErrorResponse> handleStorageExceptionException(
+            StorageException ex, WebRequest request) {
+        log.error("Storage exception: {}", ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(EmployeeNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEmployeeNotFoundExceptionException(
+            EmployeeNotFoundException ex, WebRequest request) {
+        log.error("Employee not found: {}", ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(SameDepartmentException.class)
+    public ResponseEntity<ErrorResponse> handleSameDepartmentException(
+            SameDepartmentException ex, WebRequest request) {
+        log.error("Employee already in this department: {}", ex.getMessage());
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.CONFLICT);
+    }
 }

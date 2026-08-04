@@ -1,11 +1,13 @@
 package com.hrflow.hrflow_backend.service;
 
-import com.hrflow.hrflow_backend.dto.*;
+import com.hrflow.hrflow_backend.dto.auth.*;
 import com.hrflow.hrflow_backend.entity.User;
 import com.hrflow.hrflow_backend.enums.Role;
 import com.hrflow.hrflow_backend.exceptionHandler.*;
 import com.hrflow.hrflow_backend.repository.UserRepository;
 import com.hrflow.hrflow_backend.security.JwtService;
+import com.hrflow.hrflow_backend.utils.TokenUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -13,9 +15,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,25 +27,35 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
 
+    private static final long VERIFICATION_TOKEN_HOURS = 24;
+    private static final long ACTIVATION_TOKEN_HOURS = 24;
+    private static final long RESET_TOKEN_HOURS = 1;
+
+    // ==================================================================
+    // FLOW 1 — Self-registration (password provided by the client)
+    // ==================================================================
+
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyTakenException("Email already taken");
         }
 
-        String verificationToken = UUID.randomUUID().toString();
+        Role role = resolvePublicRole(request.getRole());
+        String rawToken = TokenUtil.generateRawToken();
 
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.valueOf(request.getRole().toUpperCase()))
+                .role(role)
                 .enabled(false)
-                .verificationToken(verificationToken)
-                .verificationTokenExpiry(LocalDateTime.now().plusHours(24))
+                .verificationTokenHash(TokenUtil.hash(rawToken))
+                .verificationTokenExpiry(LocalDateTime.now().plusHours(VERIFICATION_TOKEN_HOURS))
                 .build();
 
         userRepository.save(user);
-        emailService.sendVerificationEmail(user.getEmail(), verificationToken);
+        emailService.sendVerificationEmail(user.getEmail(), rawToken);
 
         return AuthResponse.builder()
                 .message("Registration successful! Please check your email to verify your account.")
@@ -54,135 +64,216 @@ public class AuthService {
                 .build();
     }
 
-    public AuthResponse login(LoginRequest request) {
-
+    private Role resolvePublicRole(String requested) {
+        Role role;
         try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
-                            request.getPassword()
-                    )
-            );
-        } catch (Exception e) {
-            Throwable cause = e.getCause() != null ? e.getCause() : e;
-
-            if (cause instanceof BadCredentialsException) {
-                throw new BadCredentialsException("Invalid email or password");
-            }
-            if (cause instanceof DisabledException) {
-                return AuthResponse.builder()
-                        .message("EMAIL_NOT_VERIFIED")
-                        .email(request.getEmail())
-                        .build();
-            }
-            throw new RuntimeException("Authentication failed");
+            role = Role.valueOf(requested.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidRoleException("Invalid role: " + requested);
         }
-
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-
-        String accessToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
-
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .email(user.getEmail())
-                .role(user.getRole().name())
-                .message("Login successful")
-                .build();
+        if (role == Role.ADMIN) { // or any list of roles that cannot be self-assigned
+            throw new InvalidRoleException("This role cannot be self-assigned");
+        }
+        return role;
     }
 
-    public String verifyEmail(String token) {
+    @Transactional
+    public String verifyEmail(String rawToken) {
 
-        User user = userRepository.findByVerificationToken(token)
-                .orElseThrow(() ->
-                        new InvalidTokenException("The token is invalid"));
+        String hash = TokenUtil.hash(rawToken);
+
+        User user = userRepository.findByVerificationTokenHash(hash)
+                .orElseThrow(() -> new InvalidTokenException("The token is invalid"));
 
         if (user.getVerificationTokenExpiry().isBefore(LocalDateTime.now())) {
             throw new ExpiredTokenException("The token is expired");
         }
 
         user.setEnabled(true);
-        user.setVerificationToken(null);
+        user.setVerificationTokenHash(null);
         user.setVerificationTokenExpiry(null);
         userRepository.save(user);
 
         return "Email verified successfully! You can now login.";
     }
 
+    @Transactional
     public AuthResponse resendVerificationEmail(ResendVerificationRequest request) {
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Email not found"));
-
-        // Already verified
-        if (user.isEnabled()) {
-            throw new AccountAlreadyVerifiedException("This account is already verified");
-        }
-
-        // Generate a new token
-        String newToken = UUID.randomUUID().toString();
-        user.setVerificationToken(newToken);
-        user.setVerificationTokenExpiry(LocalDateTime.now().plusHours(24));
-        userRepository.save(user);
-
-        // Resend Link
-        emailService.sendVerificationEmail(user.getEmail(), newToken);
+        userRepository.findByEmail(request.getEmail())
+                .filter(user -> !user.isEnabled())
+                .filter(user -> user.getPassword() != null) // excludes accounts "pending activation"
+                .ifPresent(user -> {
+                    String rawToken = TokenUtil.generateRawToken();
+                    user.setVerificationTokenHash(TokenUtil.hash(rawToken));
+                    user.setVerificationTokenExpiry(LocalDateTime.now().plusHours(VERIFICATION_TOKEN_HOURS));
+                    userRepository.save(user);
+                    emailService.sendVerificationEmail(user.getEmail(), rawToken);
+                });
 
         return AuthResponse.builder()
-                .message("Verification email resent! Please check your inbox.")
+                .message("If an account exists and is not yet verified, a new verification email has been sent.")
+                .build();
+    }
+
+    // ==================================================================
+    // FLOW 2 — Created by a third party (HR creates an employee, no password)
+    // Called from EmployeeService, not directly exposed to the client.
+    // ==================================================================
+
+    @Transactional
+    public User createPendingUser(String email, Role role) {
+
+        if (userRepository.existsByEmail(email)) {
+            throw new EmailAlreadyTakenException("Email already taken");
+        }
+
+        String rawToken = TokenUtil.generateRawToken();
+
+        User user = User.builder()
+                .email(email)
+                .password(null)
+                .role(role)
+                .enabled(false)
+                .activationTokenHash(TokenUtil.hash(rawToken))
+                .activationTokenExpiry(LocalDateTime.now().plusHours(ACTIVATION_TOKEN_HOURS))
+                .build();
+
+        // Save the user entity to the database
+        userRepository.save(user);
+
+        // Send an account activation email to the user with their email address and a raw activation token
+        emailService.sendAccountActivationEmail(user.getEmail(), rawToken);
+
+        return user;
+    }
+
+    public void validateActivationToken(String rawToken) {
+        String hash = TokenUtil.hash(rawToken);
+
+        User user = userRepository.findByActivationTokenHash(hash)
+                .orElseThrow(() -> new InvalidTokenException("Invalid or expired token"));
+
+        if (user.getActivationTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new ExpiredTokenException("This activation link has expired");
+        }
+    }
+
+    @Transactional
+    public AuthResponse setInitialPassword(SetPasswordRequest request) {
+
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new PasswordMismatchException("Passwords do not match");
+        }
+
+        String hash = TokenUtil.hash(request.getToken());
+
+        User user = userRepository.findByActivationTokenHash(hash)
+                .orElseThrow(() -> new InvalidTokenException("Invalid or expired token"));
+
+        if (user.getActivationTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new ExpiredTokenException("This activation link has expired");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setEnabled(true);
+        user.setActivationTokenHash(null);
+        user.setActivationTokenExpiry(null);
+        userRepository.save(user);
+
+        return AuthResponse.builder()
+                .message("Account activated successfully! You can now login.")
                 .email(user.getEmail())
                 .build();
     }
 
+    @Transactional
+    public AuthResponse resendActivationEmail(ResendVerificationRequest request) {
+
+        userRepository.findByEmail(request.getEmail())
+                .filter(user -> !user.isEnabled())
+                .filter(user -> user.getPassword() == null) // only accounts created by a third party
+                .ifPresent(user -> {
+                    String rawToken = TokenUtil.generateRawToken();
+                    user.setActivationTokenHash(TokenUtil.hash(rawToken));
+                    user.setActivationTokenExpiry(LocalDateTime.now().plusHours(ACTIVATION_TOKEN_HOURS));
+                    userRepository.save(user);
+                    emailService.sendAccountActivationEmail(user.getEmail(), rawToken);
+                });
+
+        return AuthResponse.builder()
+                .message("If an account exists and is not yet activated, a new activation email has been sent.")
+                .build();
+    }
+
+    // ==================================================================
+    // Login (common to both flows)
+    // ==================================================================
+
+    public AuthResponse login(LoginRequest request) {
+
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+        } catch (DisabledException e) {
+            throw new EmailNotVerifiedException("Please verify or activate your account before logging in");
+        } catch (BadCredentialsException e) {
+            throw new BadCredentialsException("Invalid email or password");
+        }
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        return AuthResponse.builder()
+                .accessToken(jwtService.generateToken(user))
+                .refreshToken(jwtService.generateRefreshToken(user))
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .message("Login successful")
+                .build();
+    }
+
+    // ==================================================================
+    // Forgot password (common to both flows, once the account is active)
+    // ==================================================================
+
+    @Transactional
     public AuthResponse forgotPassword(ForgotPasswordRequest request) {
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UserNotFoundException("Email not found"));
-
-        // Verify if the account is active
-        if (!user.isEnabled()) {
-            return AuthResponse.builder()
-                    .message("EMAIL_NOT_VERIFIED")
-                    .email(user.getEmail())
-                    .build();
-        }
-
-        // generate the token (expires in 1 hour)
-        String resetToken = UUID.randomUUID().toString();
-        user.setResetPasswordToken(resetToken);
-        user.setResetPasswordTokenExpiry(LocalDateTime.now().plusHours(1));
-        userRepository.save(user);
-
-        // Send the email
-        emailService.sendResetPasswordEmail(user.getEmail(), resetToken);
+        userRepository.findByEmail(request.getEmail())
+                .filter(User::isEnabled)
+                .ifPresent(user -> {
+                    String rawToken = TokenUtil.generateRawToken();
+                    user.setResetPasswordTokenHash(TokenUtil.hash(rawToken));
+                    user.setResetPasswordTokenExpiry(LocalDateTime.now().plusHours(RESET_TOKEN_HOURS));
+                    userRepository.save(user);
+                    emailService.sendResetPasswordEmail(user.getEmail(), rawToken);
+                });
 
         return AuthResponse.builder()
-                .message("Password reset email sent! Please check your inbox.")
-                .email(user.getEmail())
+                .message("If an account exists with this email, a password reset link has been sent.")
                 .build();
     }
 
+    @Transactional
     public AuthResponse resetPassword(ResetPasswordRequest request) {
 
-        // Verify if the passwords matches
         if (!request.getNewPassword().equals(request.getConfirmPassword())) {
             throw new PasswordMismatchException("Passwords do not match");
         }
 
-        // Search the user by th token
-        User user = userRepository.findByResetPasswordToken(request.getToken())
+        String hash = TokenUtil.hash(request.getToken());
+
+        User user = userRepository.findByResetPasswordTokenHash(hash)
                 .orElseThrow(() -> new InvalidTokenException("Invalid reset token"));
 
-        // Verify if token is not expired
         if (user.getResetPasswordTokenExpiry().isBefore(LocalDateTime.now())) {
             throw new ExpiredTokenException("Reset token has expired");
         }
 
-        // Update password
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        user.setResetPasswordToken(null);
+        user.setResetPasswordTokenHash(null);
         user.setResetPasswordTokenExpiry(null);
         userRepository.save(user);
 
