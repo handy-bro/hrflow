@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{email/layout :: layout(~{::content})}">
+    <div th:fragment="content">
+        <h1 style="margin:0 0 16px; font-size:20px; color:#111827;">New Leave Request</h1>
+
+        <p style="margin:0 0 20px; font-size:14px; color:#374151; line-height:1.6;">
+            <strong th:text="${employeeName}">John Doe</strong> has submitted a leave request.
+        </p>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+               style="background-color:#f9fafb; border-radius:6px; margin-bottom:24px;">
+            <tr>
+                <td style="padding:16px 20px; font-size:14px; color:#374151;">
+                    <p style="margin:0 0 8px;"><strong>Type:</strong> <span th:text="${leaveType}">ANNUAL</span></p>
+                    <p style="margin:0 0 8px;"><strong>From:</strong> <span th:text="${startDate}">2026-08-10</span></p>
+                    <p style="margin:0 0 8px;"><strong>To:</strong> <span th:text="${endDate}">2026-08-14</span></p>
+                    <p style="margin:0;"><strong>Requested Days:</strong> <span th:text="${requestedDays}">5</span></p>
+                </td>
+            </tr>
+        </table>
+
+        <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr>
+                <td style="border-radius:6px; background-color:#2563eb;">
+                    <a th:href="${link}"
+                       style="display:inline-block; padding:12px 28px; font-size:14px; font-weight:600; color:#ffffff; text-decoration:none;">
+                        Review Request
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </div>
+</th:block>
+</body>
+</html>

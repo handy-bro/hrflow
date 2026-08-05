@@ -1,6 +1,12 @@
 package com.hrflow.hrflow_backend.exceptionHandler;
 
+import com.hrflow.hrflow_backend.exceptionHandler.auth.*;
+import com.hrflow.hrflow_backend.exceptionHandler.departments.DepartmentNotFoundException;
+import com.hrflow.hrflow_backend.exceptionHandler.departments.SameDepartmentException;
+import com.hrflow.hrflow_backend.exceptionHandler.employees.EmployeeNotFoundException;
+import com.hrflow.hrflow_backend.exceptionHandler.leaves.*;
 import com.hrflow.hrflow_backend.exceptionHandler.response.ErrorResponse;
+import com.hrflow.hrflow_backend.exceptionHandler.storage.StorageException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -168,5 +174,77 @@ public class GlobalExceptionHandler {
                 ((ServletWebRequest) request).getRequest().getRequestURI()
         );
         return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(InsufficientLeaveBalanceException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientLeaveBalanceException(
+            InsufficientLeaveBalanceException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidLeaveDatesException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidLeaveDatesException(
+            InvalidLeaveDatesException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(InvalidLeaveStatusException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidLeaveStatusException(
+            InvalidLeaveStatusException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(LeaveRequestNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleLeaveRequestNotFoundException(
+            LeaveRequestNotFoundException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(OverlappingLeaveException.class)
+    public ResponseEntity<ErrorResponse> handleOverlappingLeaveException(
+            OverlappingLeaveException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UnauthorizedLeaveActionException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedLeaveActionException(
+            UnauthorizedLeaveActionException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.UNAUTHORIZED);
     }
 }

@@ -1,4 +1,6 @@
-package com.hrflow.hrflow_backend.exceptionHandler;
+package com.hrflow.hrflow_backend.exceptionHandler.storage;
+
+import com.hrflow.hrflow_backend.exceptionHandler.BaseException;
 
 public class StorageException extends BaseException {
     public StorageException(String message) {

@@ -1,6 +1,6 @@
 package com.hrflow.hrflow_backend.storage;
 
-import com.hrflow.hrflow_backend.exceptionHandler.StorageException;
+import com.hrflow.hrflow_backend.exceptionHandler.storage.StorageException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.sync.RequestBody;

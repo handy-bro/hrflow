@@ -1,6 +1,6 @@
 package com.hrflow.hrflow_backend.storage;
 
-import com.hrflow.hrflow_backend.exceptionHandler.StorageException;
+import com.hrflow.hrflow_backend.exceptionHandler.storage.StorageException;
 import org.springframework.stereotype.Component;
 import java.util.UUID;
 

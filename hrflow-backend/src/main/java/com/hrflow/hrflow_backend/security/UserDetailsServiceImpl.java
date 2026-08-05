@@ -1,6 +1,5 @@
 package com.hrflow.hrflow_backend.security;
 
-import com.hrflow.hrflow_backend.exceptionHandler.UserNotFoundException;
 import com.hrflow.hrflow_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;

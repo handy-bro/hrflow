@@ -3,7 +3,7 @@ package com.hrflow.hrflow_backend.service;
 import com.hrflow.hrflow_backend.dto.auth.*;
 import com.hrflow.hrflow_backend.entity.User;
 import com.hrflow.hrflow_backend.enums.Role;
-import com.hrflow.hrflow_backend.exceptionHandler.*;
+import com.hrflow.hrflow_backend.exceptionHandler.auth.*;
 import com.hrflow.hrflow_backend.repository.UserRepository;
 import com.hrflow.hrflow_backend.security.JwtService;
 import com.hrflow.hrflow_backend.utils.TokenUtil;

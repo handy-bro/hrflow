@@ -72,6 +72,10 @@ public class Employee {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    private Employee manager;
+
     // Timestamps
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
