@@ -20,4 +20,8 @@ public class StorageKeyGenerator {
             default -> throw new StorageException("Unsupported file type: " + contentType);
         };
     }
+
+    public String payslipKey(Long employeeId, int year, int month) {
+        return "employees/%d/payslips/%d-%02d.pdf".formatted(employeeId, year, month);
+    }
 }

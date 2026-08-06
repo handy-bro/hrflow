@@ -8,6 +8,9 @@ import com.hrflow.hrflow_backend.exceptionHandler.departments.DepartmentNotFound
 import com.hrflow.hrflow_backend.exceptionHandler.departments.SameDepartmentException;
 import com.hrflow.hrflow_backend.exceptionHandler.employees.EmployeeNotFoundException;
 import com.hrflow.hrflow_backend.exceptionHandler.leaves.*;
+import com.hrflow.hrflow_backend.exceptionHandler.payslip.PayslipAccessDeniedException;
+import com.hrflow.hrflow_backend.exceptionHandler.payslip.PayslipAlreadyExistsException;
+import com.hrflow.hrflow_backend.exceptionHandler.payslip.PayslipNotFoundException;
 import com.hrflow.hrflow_backend.exceptionHandler.response.ErrorResponse;
 import com.hrflow.hrflow_backend.exceptionHandler.storage.StorageException;
 import lombok.extern.slf4j.Slf4j;
@@ -286,4 +289,41 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(PayslipAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handlePayslipAlreadyExistsException(
+            PayslipAlreadyExistsException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(PayslipNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePayslipNotFoundException(
+            PayslipNotFoundException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.NOT_FOUND.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(PayslipAccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handlePayslipAccessDeniedException(
+            PayslipAccessDeniedException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.UNAUTHORIZED);
+    }
+
 }
