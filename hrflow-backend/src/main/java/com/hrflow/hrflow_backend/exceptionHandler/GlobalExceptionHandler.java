@@ -1,5 +1,8 @@
 package com.hrflow.hrflow_backend.exceptionHandler;
 
+import com.hrflow.hrflow_backend.exceptionHandler.attendance.AlreadyCheckedInException;
+import com.hrflow.hrflow_backend.exceptionHandler.attendance.AlreadyCheckedOutException;
+import com.hrflow.hrflow_backend.exceptionHandler.attendance.NotCheckedInException;
 import com.hrflow.hrflow_backend.exceptionHandler.auth.*;
 import com.hrflow.hrflow_backend.exceptionHandler.departments.DepartmentNotFoundException;
 import com.hrflow.hrflow_backend.exceptionHandler.departments.SameDepartmentException;
@@ -246,5 +249,41 @@ public class GlobalExceptionHandler {
                 ((ServletWebRequest) request).getRequest().getRequestURI()
         );
         return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(AlreadyCheckedInException.class)
+    public ResponseEntity<ErrorResponse> handleAlreadyCheckedInException(
+            AlreadyCheckedInException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(AlreadyCheckedOutException.class)
+    public ResponseEntity<ErrorResponse> handleAlreadyCheckedOutException(
+            AlreadyCheckedOutException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(NotCheckedInException.class)
+    public ResponseEntity<ErrorResponse> handleNotCheckedInException(
+            NotCheckedInException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
     }
 }

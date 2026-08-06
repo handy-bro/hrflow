@@ -9,6 +9,7 @@ import org.hibernate.annotations.SQLRestriction;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "employees")
@@ -79,6 +80,15 @@ public class Employee {
     // Timestamps
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    // For Attendance
+    @Column(nullable = false)
+    @Builder.Default
+    private LocalTime expectedStartTime = LocalTime.of(9, 0);
+
+    @Column(nullable = false)
+    @Builder.Default
+    private BigDecimal contractualHoursPerDay = BigDecimal.valueOf(8);
 
     @PrePersist
     public void prePersist() {
