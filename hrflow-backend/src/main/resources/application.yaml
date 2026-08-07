@@ -1,12 +1,12 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/hrflow_db
-    password: password
+    url: jdbc:postgresql://127.0.0.1:5433/hrflow_db
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-    username: handy
+    username: ${DB_USERNAME}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
@@ -32,10 +32,10 @@ server:
 application:
   security:
     jwt:
-      secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-      expiration: 86400000
+      secret-key: ${TOKEN_SECRET}
+      expiration: ${TOKEN_EXPIRATION}
       refresh-token:
-        expiration: 604800000
+        expiration: ${REFRESH_TOKEN_EXPIRATION}
 
 springdoc:
   api-docs:
@@ -45,3 +45,22 @@ springdoc:
     enabled: true
   use-management-port: false
   default-flat-param-object: true
+
+storage:
+  endpoint: ${STORAGE_ENDPOINT:http://localhost:9000}
+  access-key: ${STORAGE_ACCESS_KEY}
+  secret-key: ${STORAGE_SECRET_KEY}
+  bucket: ${STORAGE_BUCKET:hrflow-uploads}
+  public-base-url: ${STORAGE_PUBLIC_URL}
+  region: ${STORAGE_REGION:auto}
+
+leave-policy:
+  annual-days: 25
+  sick-days: 10
+  maternity-paternity-days: 90
+
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:4200}
+
+attendance-policy:
+  grace-period-minutes: 10

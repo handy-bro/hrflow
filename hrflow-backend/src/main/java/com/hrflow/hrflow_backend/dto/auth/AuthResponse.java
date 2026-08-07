@@ -1,4 +1,4 @@
-package com.hrflow.hrflow_backend.dto;
+package com.hrflow.hrflow_backend.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

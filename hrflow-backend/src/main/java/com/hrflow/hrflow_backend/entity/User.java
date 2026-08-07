@@ -13,7 +13,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,20 +24,36 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version;
+
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
+    /*
+     Can be null, because when an employee is created, his user-account is created automatically without a password.
+     He will receive a mail before setting his password
+     */
+    @Column(nullable = true)
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Role role;
 
-    private boolean enabled;
+    @Builder.Default
+    private boolean enabled = false;
 
-    private String verificationToken;
-
+    // Verify if the email belong to the user created
+    private String verificationTokenHash;
     private LocalDateTime verificationTokenExpiry;
+
+    // Used to activate user's account by setting password
+    private String activationTokenHash;
+    private LocalDateTime activationTokenExpiry;
+
+    private String resetPasswordTokenHash;
+    private LocalDateTime resetPasswordTokenExpiry;
 
     private LocalDateTime createdAt;
 
@@ -66,4 +83,14 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() { return enabled; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User other)) return false;
+        return id != null && id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() { return getClass().hashCode(); }
 }
