@@ -90,6 +90,10 @@ public class Employee {
     @Builder.Default
     private BigDecimal contractualHoursPerDay = BigDecimal.valueOf(8);
 
+    private LocalDate contractEndDate; // null = permanent contract
+
+    private LocalDateTime archivedAt;
+
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();

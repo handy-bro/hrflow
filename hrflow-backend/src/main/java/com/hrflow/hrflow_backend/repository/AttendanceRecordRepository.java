@@ -28,4 +28,14 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
             @Param("departmentId") Long departmentId,
             @Param("date") LocalDate date
     );
+
+    // For dashboard
+
+    @Query("""
+    SELECT ar.employee.department.id, ar.employee.department.name, ar.status, COUNT(ar)
+    FROM AttendanceRecord ar
+    WHERE ar.workDate BETWEEN :monthStart AND :monthEnd
+    GROUP BY ar.employee.department.id, ar.employee.department.name, ar.status
+    """)
+    List<Object[]> countStatusByDepartment(@Param("monthStart") LocalDate monthStart, @Param("monthEnd") LocalDate monthEnd);
 }

@@ -1,6 +1,7 @@
 package com.hrflow.hrflow_backend.repository;
 
 import com.hrflow.hrflow_backend.entity.LeaveRequest;
+import com.hrflow.hrflow_backend.enums.LeaveStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -40,4 +41,15 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
             @Param("departmentId") Long departmentId,
             @Param("monthStart") LocalDate monthStart,
             @Param("monthEnd") LocalDate monthEnd);
+
+    // For dashboard
+
+    @Query("""
+    SELECT lr FROM LeaveRequest lr
+    WHERE lr.status = 'PENDING'
+    ORDER BY lr.createdAt ASC
+    """)
+    List<LeaveRequest> findAllPending();
+
+    long countByStatus(LeaveStatus status);
 }
