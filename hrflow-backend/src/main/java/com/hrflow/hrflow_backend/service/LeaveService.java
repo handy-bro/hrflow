@@ -107,7 +107,7 @@ public class LeaveService {
     // ==================================================================
 
     @Transactional
-    public LeaveRequestResponse review(Long leaveRequestId, ReviewLeaveRequest request, Long reviewerUserId) {
+    public LeaveRequestResponse review(Long leaveRequestId, ReviewLeaveRequest request, User reviewerUser) {
 
         if (request.decision() != LeaveStatus.APPROVED && request.decision() != LeaveStatus.REJECTED) {
             throw new InvalidLeaveStatusException("Decision must be APPROVED or REJECTED");
@@ -124,20 +124,21 @@ public class LeaveService {
             throw new InvalidLeaveStatusException("Only pending requests can be reviewed");
         }
 
-        Employee reviewer = employeeRepository.findByUserId(reviewerUserId)
-                .orElseThrow(() -> new UnauthorizedLeaveActionException("Reviewer has no employee profile"));
+        boolean isPrivileged = reviewerUser.getRole() == Role.ADMIN;
 
-        boolean isDirectManager = leaveRequest.getEmployee().getManager() != null
-                && leaveRequest.getEmployee().getManager().getId().equals(reviewer.getId());
-        boolean isPrivileged = reviewer.getUser().getRole() == Role.ADMIN;
+        Employee reviewerEmployee = employeeRepository.findByUserId(reviewerUser.getId()).orElse(null);
 
-        if (!isDirectManager && !isPrivileged) {
+        boolean isDirectManager = reviewerEmployee != null
+                && leaveRequest.getEmployee().getManager() != null
+                && leaveRequest.getEmployee().getManager().getId().equals(reviewerEmployee.getId());
+
+        if (!isPrivileged && !isDirectManager) {
             throw new UnauthorizedLeaveActionException("Not authorized to review this request");
         }
 
         leaveRequest.setStatus(request.decision());
         leaveRequest.setManagerComment(request.comment());
-        leaveRequest.setReviewedBy(reviewer);
+        leaveRequest.setReviewedBy(reviewerEmployee); // peut être null si l'admin n'a pas de fiche employé
         leaveRequest.setReviewedAt(LocalDateTime.now());
 
         if (request.decision() == LeaveStatus.APPROVED
@@ -155,7 +156,6 @@ public class LeaveService {
 
         return toResponse(leaveRequest);
     }
-
     // ==================================================================
     // Cancellation
     // ==================================================================
@@ -201,7 +201,7 @@ public class LeaveService {
     // Balance
     // ==================================================================
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<LeaveBalanceResponse> getBalances(Long employeeId, int year) {
         Employee employee = getEmployeeOrThrow(employeeId);
 

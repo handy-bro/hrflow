@@ -38,7 +38,7 @@ public class PayslipController {
     @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/employee/{employeeId}/generate")
     public ResponseEntity<PayslipResponse> generate(
-            @PathVariable Long employeeId, @Valid @RequestBody GeneratePayslipRequest request) {
+            @PathVariable("employeeId") Long employeeId, @Valid @RequestBody GeneratePayslipRequest request) {
         return ResponseEntity.ok(payslipService.generate(employeeId, request));
     }
 
@@ -49,7 +49,7 @@ public class PayslipController {
     @PreAuthorize("hasAnyRole('ADMIN')")
     @PostMapping("/employee/{employeeId}/regenerate")
     public ResponseEntity<PayslipResponse> regenerate(
-            @PathVariable Long employeeId, @Valid @RequestBody GeneratePayslipRequest request) {
+            @PathVariable("employeeId") Long employeeId, @Valid @RequestBody GeneratePayslipRequest request) {
         return ResponseEntity.ok(payslipService.regenerate(employeeId, request));
     }
 
@@ -69,7 +69,7 @@ public class PayslipController {
     )
     @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/employee/{employeeId}")
-    public ResponseEntity<List<PayslipResponse>> employeeHistory(@PathVariable Long employeeId) {
+    public ResponseEntity<List<PayslipResponse>> employeeHistory(@PathVariable("employeeId") Long employeeId) {
         return ResponseEntity.ok(payslipService.getHistory(employeeId));
     }
 
@@ -79,7 +79,7 @@ public class PayslipController {
     )
     @GetMapping("/{id}/download")
     public void downloadPdf(
-            @PathVariable Long id, HttpServletResponse response,
+            @PathVariable("id") Long id, HttpServletResponse response,
             @AuthenticationPrincipal User currentUser) throws IOException {
 
         Payslip payslip = payslipService.getForDownload(id, currentUser); // verifies permissions internally

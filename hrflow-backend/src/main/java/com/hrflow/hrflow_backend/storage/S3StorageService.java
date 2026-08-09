@@ -31,7 +31,7 @@ public class S3StorageService implements StorageService {
                     RequestBody.fromInputStream(data, size)
             );
         } catch (S3Exception e) {
-            throw new StorageException("Failed to upload file: " + key + "Caused by" + e);
+            throw new StorageException("Failed to upload file: " + key + ", Caused by : " + e);
         }
     }
 

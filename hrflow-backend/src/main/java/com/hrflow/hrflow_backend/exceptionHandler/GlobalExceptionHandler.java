@@ -4,6 +4,7 @@ import com.hrflow.hrflow_backend.exceptionHandler.attendance.AlreadyCheckedInExc
 import com.hrflow.hrflow_backend.exceptionHandler.attendance.AlreadyCheckedOutException;
 import com.hrflow.hrflow_backend.exceptionHandler.attendance.NotCheckedInException;
 import com.hrflow.hrflow_backend.exceptionHandler.auth.*;
+import com.hrflow.hrflow_backend.exceptionHandler.departments.DepartmentAlreadyExists;
 import com.hrflow.hrflow_backend.exceptionHandler.departments.DepartmentNotFoundException;
 import com.hrflow.hrflow_backend.exceptionHandler.departments.SameDepartmentException;
 import com.hrflow.hrflow_backend.exceptionHandler.employees.EmployeeNotFoundException;
@@ -182,6 +183,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(DepartmentAlreadyExists.class)
+    public ResponseEntity<ErrorResponse> handleDepartmentAlreadyExists(
+            DepartmentAlreadyExists ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(InsufficientLeaveBalanceException.class)
     public ResponseEntity<ErrorResponse> handleInsufficientLeaveBalanceException(
             InsufficientLeaveBalanceException ex, WebRequest request) {
@@ -324,6 +337,19 @@ public class GlobalExceptionHandler {
                 ((ServletWebRequest) request).getRequest().getRequestURI()
         );
         return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+            org.springframework.security.access.AccessDeniedException ex, WebRequest request) {
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.FORBIDDEN.toString(),
+                "ACCESS_DENIED",
+                "You do not have permission to perform this action",
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.FORBIDDEN);
     }
 
 }

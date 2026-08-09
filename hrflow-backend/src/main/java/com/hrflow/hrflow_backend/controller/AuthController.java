@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -60,5 +61,16 @@ public class AuthController {
     @Operation(summary = "Reset password")
     public ResponseEntity<AuthResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         return ResponseEntity.ok(authService.resetPassword(request));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/users")
+    @Operation(
+            summary = "Create a privileged user account",
+            description = "Allows an existing admin to create another user with any role, including ADMIN."
+    )
+    public ResponseEntity<AuthResponse> createUserByAdmin(
+            @Valid @RequestBody CreateUserByAdminRequest request) {
+        return ResponseEntity.ok(authService.createUserByAdmin(request));
     }
 }

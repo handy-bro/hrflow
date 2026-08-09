@@ -6,7 +6,7 @@ spring:
     username: ${DB_USERNAME}
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -61,6 +61,9 @@ leave-policy:
 
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:4200}
+  admin:
+    email: ${ADMIN_EMAIL:admin@gmail.com} # Used by the seeder to automatically create an admin account at startup
+    password: ${ADMIN_PASSWORD:P@ssword123}
 
 attendance-policy:
   grace-period-minutes: 10

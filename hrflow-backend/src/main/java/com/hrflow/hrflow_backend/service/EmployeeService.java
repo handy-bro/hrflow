@@ -71,8 +71,6 @@ public class EmployeeService {
         Department department = departmentRepository.findById(request.departmentId())
                 .orElseThrow(() -> new DepartmentNotFoundException("Department not found"));
 
-        String rawToken = TokenUtil.generateRawToken();
-
         User user = authService.createPendingUser(request.email(), Role.EMPLOYEE);
 
         Employee employee = Employee.builder()
@@ -90,8 +88,6 @@ public class EmployeeService {
                 .build();
         employeeRepository.save(employee);
 
-        emailService.sendAccountActivationEmail(user.getEmail(), rawToken);
-
         return employeeMapper.toResponse(employee);
     }
 
@@ -102,10 +98,11 @@ public class EmployeeService {
             Pageable pageable
     ) {
 
-        Specification<Employee> spec =
-                EmployeeSpecifications.nameContains(name)
-                        .and(EmployeeSpecifications.hasPosition(position))
-                        .and(EmployeeSpecifications.inDepartment(departmentId));
+        Specification<Employee> spec = Specification.allOf(
+                EmployeeSpecifications.nameContains(name),
+                EmployeeSpecifications.hasPosition(position),
+                EmployeeSpecifications.inDepartment(departmentId)
+        );
 
         Page<Employee> page = employeeRepository.findAll(spec, pageable);
 

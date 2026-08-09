@@ -9,6 +9,7 @@ import com.hrflow.hrflow_backend.security.JwtService;
 import com.hrflow.hrflow_backend.utils.TokenUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -17,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -64,6 +66,31 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
+    public AuthResponse createUserByAdmin(CreateUserByAdminRequest request) {
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new EmailAlreadyTakenException("Email already taken");
+        }
+
+        Role role = resolveAnyRole(request.getRole());
+
+        User user = User.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(role)
+                .enabled(true)
+                .build();
+
+        userRepository.save(user);
+
+        return AuthResponse.builder()
+                .message("User created successfully")
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .build();
+    }
+
     private Role resolvePublicRole(String requested) {
         Role role;
         try {
@@ -75,6 +102,14 @@ public class AuthService {
             throw new InvalidRoleException("This role cannot be self-assigned");
         }
         return role;
+    }
+
+    private Role resolveAnyRole(String requested) {
+        try {
+            return Role.valueOf(requested.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new InvalidRoleException("Invalid role: " + requested);
+        }
     }
 
     @Transactional
@@ -149,7 +184,9 @@ public class AuthService {
     }
 
     public void validateActivationToken(String rawToken) {
+        log.info("Received raw token for validation: [{}]", rawToken);
         String hash = TokenUtil.hash(rawToken);
+        log.info("Validating activation token hash = {}", hash);
 
         User user = userRepository.findByActivationTokenHash(hash)
                 .orElseThrow(() -> new InvalidTokenException("Invalid or expired token"));
@@ -167,6 +204,7 @@ public class AuthService {
         }
 
         String hash = TokenUtil.hash(request.getToken());
+        log.info("Validating activation token hash = {}", hash);
 
         User user = userRepository.findByActivationTokenHash(hash)
                 .orElseThrow(() -> new InvalidTokenException("Invalid or expired token"));
