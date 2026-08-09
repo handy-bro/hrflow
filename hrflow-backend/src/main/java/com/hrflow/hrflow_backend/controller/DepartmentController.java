@@ -54,7 +54,7 @@ public class DepartmentController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Get department by ID")
     public ResponseEntity<DepartmentResponse> getDepartmentById(
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
         return ResponseEntity.ok(departmentService.getDepartmentById(id));
     }
 
@@ -65,7 +65,7 @@ public class DepartmentController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update department")
     public ResponseEntity<DepartmentResponse> updateDepartment(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody UpdateDepartmentRequest request) {
         return ResponseEntity.ok(departmentService.updateDepartment(id, request));
     }
@@ -76,7 +76,7 @@ public class DepartmentController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete department")
-    public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteDepartment(@PathVariable("id") Long id) {
         departmentService.deleteDepartment(id);
         return ResponseEntity.noContent().build();
     }

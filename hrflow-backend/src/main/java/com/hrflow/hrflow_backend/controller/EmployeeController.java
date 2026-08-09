@@ -41,9 +41,9 @@ public class EmployeeController {
     @GetMapping
     @Operation(summary = "List employees", description = "Retrieves a paginated list of employees.")
     public ResponseEntity<Page<EmployeeResponse>> listEmployees(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) Long departmentId,
-            @RequestParam(required = false) String position,
+            @RequestParam(value = "name", required = false) String name,
+            @RequestParam(value = "departmentId", required = false) Long departmentId,
+            @RequestParam(value = "position", required = false) String position,
             Pageable pageable
     ) {
         return ResponseEntity.ok(employeeService.listEmployees(name, departmentId, position, pageable));
@@ -52,7 +52,7 @@ public class EmployeeController {
     @PatchMapping("/{id}/department")
     @Operation(summary = "Change department", description = "Updates the department of an employee.")
     public ResponseEntity<Void> changeDepartment(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody ChangeDepartmentRequest request
     ) {
         employeeService.changeDepartment(id, request);
@@ -62,7 +62,7 @@ public class EmployeeController {
     @PutMapping("/{id}")
     @Operation(summary = "Update an employee", description = "Updates the information of an existing employee.")
     public ResponseEntity<EmployeeResponse> updateEmployee(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody UpdateEmployeeRequest request
     ) {
         return ResponseEntity.ok(employeeService.updateEmployee(id, request, null));
@@ -70,21 +70,21 @@ public class EmployeeController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete an employee", description = "Deletes an employee by marking them as removed.")
-    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteEmployee(@PathVariable("id") Long id) {
         employeeService.deleteEmployee(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/restore")
     @Operation(summary = "Restore an employee", description = "Restores a previously deleted employee.")
-    public ResponseEntity<Void> restoreEmployee(@PathVariable Long id) {
+    public ResponseEntity<Void> restoreEmployee(@PathVariable("id") Long id) {
         employeeService.restoreEmployee(id);
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/{id}/archive")
     @Operation(summary = "Archive an employee", description = "Archives an employee.")
-    public ResponseEntity<Void> archiveEmployee(@PathVariable Long id) {
+    public ResponseEntity<Void> archiveEmployee(@PathVariable("id") Long id) {
         employeeService.archiveEmployee(id);
         return ResponseEntity.ok().build();
     }
@@ -92,7 +92,7 @@ public class EmployeeController {
     @PostMapping("/{id}/upload-profile-photo")
     @Operation(summary = "Upload profile photo", description = "Uploads a profile photo for the specified employee.")
     public ResponseEntity<Void> uploadProfilePhoto(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
         employeeService.uploadPhoto(id, file);

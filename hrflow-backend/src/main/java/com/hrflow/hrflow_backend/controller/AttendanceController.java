@@ -56,7 +56,7 @@ public class AttendanceController {
     )
     @GetMapping("/me/report")
     public ResponseEntity<MonthlyAttendanceReportResponse> myReport(
-            @RequestParam int year, @RequestParam int month,
+            @RequestParam(name = "year") int year, @RequestParam(name = "month") int month,
             @AuthenticationPrincipal User currentUser) {
         Long employeeId = currentEmployeeId(currentUser);
         return ResponseEntity.ok(attendanceService.getMonthlyReport(employeeId, year, month));
@@ -79,7 +79,7 @@ public class AttendanceController {
     )
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @GetMapping("/department/{departmentId}/today")
-    public ResponseEntity<List<AttendanceDayResponse>> departmentToday(@PathVariable Long departmentId) {
+    public ResponseEntity<List<AttendanceDayResponse>> departmentToday(@PathVariable("departmentId") Long departmentId) {
         return ResponseEntity.ok(attendanceService.getTodayForDepartment(departmentId));
     }
 

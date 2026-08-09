@@ -54,10 +54,10 @@ public class LeaveController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PatchMapping("/{id}/review")
     public ResponseEntity<LeaveRequestResponse> review(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody ReviewLeaveRequest request,
             @AuthenticationPrincipal User currentUser) {
-        return ResponseEntity.ok(leaveService.review(id, request, currentUser.getId()));
+        return ResponseEntity.ok(leaveService.review(id, request, currentUser));
     }
 
     @Operation(
@@ -66,7 +66,7 @@ public class LeaveController {
     )
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<LeaveRequestResponse> cancel(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(leaveService.cancel(id, currentUser.getId()));
     }
@@ -90,7 +90,7 @@ public class LeaveController {
     @PreAuthorize("hasAnyRole('ADMIN', 'HR', 'MANAGER')")
     @GetMapping("/employee/{employeeId}")
     public ResponseEntity<Page<LeaveRequestResponse>> employeeHistory(
-            @PathVariable Long employeeId,
+            @PathVariable("employeeId") Long employeeId,
             @PageableDefault(size = 20, sort = "startDate") Pageable pageable) {
         return ResponseEntity.ok(leaveService.getHistory(employeeId, pageable));
     }
@@ -115,7 +115,7 @@ public class LeaveController {
     @PreAuthorize("hasAnyRole('ADMIN', 'HR', 'MANAGER')")
     @GetMapping("/employee/{employeeId}/balance")
     public ResponseEntity<List<LeaveBalanceResponse>> employeeBalance(
-            @PathVariable Long employeeId,
+            @PathVariable(name = "employeeId") Long employeeId,
             @RequestParam(required = false) Integer year) {
         int targetYear = year != null ? year : LocalDate.now().getYear();
         return ResponseEntity.ok(leaveService.getBalances(employeeId, targetYear));
@@ -127,9 +127,9 @@ public class LeaveController {
     )
     @GetMapping("/calendar")
     public ResponseEntity<List<CalendarEntryResponse>> teamCalendar(
-            @RequestParam Long departmentId,
-            @RequestParam int year,
-            @RequestParam int month) {
+            @RequestParam(value = "departmentId") Long departmentId,
+            @RequestParam(value = "year") int year,
+            @RequestParam(name = "month") int month) {
         return ResponseEntity.ok(leaveService.getTeamCalendar(departmentId, year, month));
     }
 
