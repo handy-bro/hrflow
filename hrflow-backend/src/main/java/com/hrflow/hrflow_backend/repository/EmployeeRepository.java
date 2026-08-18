@@ -41,8 +41,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>, JpaSp
     @Query("""
     SELECT e FROM Employee e
     WHERE e.status = 'ACTIVE'
-    AND FUNCTION('MONTH', e.birthDate) = :month
-    AND FUNCTION('DAY', e.birthDate) = :day
+    AND EXTRACT(MONTH FROM e.birthDate) = :month
+    AND EXTRACT(DAY FROM e.birthDate) = :day
     """)
     List<Employee> findBirthdaysOn(@Param("month") int month, @Param("day") int day);
 
