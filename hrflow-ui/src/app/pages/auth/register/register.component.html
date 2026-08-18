@@ -1,0 +1,81 @@
+<app-auth-card title="Create Account" subtitle="Register to get started">
+    <form (ngSubmit)="onSubmit()">
+        <div class="flex flex-col gap-6">
+            <div>
+                <label for="email" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
+                <input
+                    pInputText
+                    id="email"
+                    type="email"
+                    placeholder="Email address"
+                    class="w-full md:w-120"
+                    [ngModel]="payload().email"
+                    (ngModelChange)="updateEmail($event)"
+                    name="email"
+                    required
+                    email
+                />
+            </div>
+
+            <div>
+                <label for="role" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Role</label>
+                <p-select
+                    id="role"
+                    [options]="roles"
+                    [ngModel]="payload().role"
+                    (ngModelChange)="updateRole($event)"
+                    name="role"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select a role"
+                    class="w-full md:w-120"
+                    [style]="{ width: '100%' }"
+                    required
+                ></p-select>
+            </div>
+
+            <div>
+                <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
+                <p-password
+                    id="password"
+                    [ngModel]="payload().password"
+                    (ngModelChange)="updatePassword($event)"
+                    name="password"
+                    placeholder="Password"
+                    [toggleMask]="true"
+                    styleClass="mb-4"
+                    [fluid]="true"
+                    required
+                ></p-password>
+            </div>
+
+            <div>
+                <label for="confirmPassword" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Confirm Password</label>
+                <p-password
+                    id="confirmPassword"
+                    [ngModel]="confirmPassword()"
+                    (ngModelChange)="updateConfirmPassword($event)"
+                    name="confirmPassword"
+                    placeholder="Confirm password"
+                    [toggleMask]="true"
+                    styleClass="mb-4"
+                    [fluid]="true"
+                    [feedback]="false"
+                    required
+                ></p-password>
+            </div>
+
+            <p-button
+                type="submit"
+                label="Register"
+                styleClass="w-full"
+                [loading]="loading()"
+            ></p-button>
+
+            <div class="text-center mt-4">
+                <span class="text-muted-color">Already have an account?</span>
+                <a routerLink="/auth/login" class="font-medium ml-2 text-primary no-underline">Sign in</a>
+            </div>
+        </div>
+    </form>
+</app-auth-card>

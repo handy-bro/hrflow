@@ -1,10 +1,15 @@
 import { Routes } from '@angular/router';
-import { Access } from './access';
-import { Login } from './login';
-import { Error } from './error';
+import { LoginComponent } from './login/login.component';
+import { RegisterComponent } from './register/register.component';
+import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './reset-password/reset-password.component';
+import { SetPasswordComponent } from './set-password/set-password.component';
+import { publicGuard } from '@/app/core/guards/auth.guard';
 
 export default [
-    { path: 'access', component: Access },
-    { path: 'error', component: Error },
-    { path: 'login', component: Login }
+    { path: 'login', component: LoginComponent, canActivate: [publicGuard] },
+    // { path: 'register', component: RegisterComponent, canActivate: [publicGuard] },
+    { path: 'forgot-password', component: ForgotPasswordComponent, canActivate: [publicGuard] },
+    { path: 'reset-password', component: ResetPasswordComponent, canActivate: [publicGuard] },
+    { path: 'set-password', component: SetPasswordComponent, canActivate: [publicGuard] }
 ] as Routes;

@@ -1,0 +1,59 @@
+<app-auth-card title="Welcome to HRFlow" subtitle="Sign in to continue">
+    <form (ngSubmit)="onSubmit()">
+        <div class="flex flex-col gap-6">
+            <div>
+                <label for="email" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
+                <input
+                    pInputText
+                    id="email"
+                    type="email"
+                    placeholder="Email address"
+                    class="w-full md:w-120"
+                    [ngModel]="credentials().email"
+                    (ngModelChange)="updateEmail($event)"
+                    name="email"
+                    required
+                    email
+                />
+            </div>
+
+            <div>
+                <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
+                <p-password
+                    id="password"
+                    [ngModel]="credentials().password"
+                    (ngModelChange)="updatePassword($event)"
+                    name="password"
+                    placeholder="Password"
+                    [toggleMask]="true"
+                    styleClass="mb-4"
+                    [fluid]="true"
+                    [feedback]="false"
+                    required
+                ></p-password>
+            </div>
+
+            <div class="flex items-center justify-between mt-2 mb-8 gap-8">
+                <div class="flex items-center">
+                    <p-checkbox [ngModel]="rememberMe()" (ngModelChange)="rememberMe.set($event)" id="rememberme" name="rememberme" binary class="mr-2"></p-checkbox>
+                    <label for="rememberme">Remember me</label>
+                </div>
+                <a routerLink="/forgot-password" class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">
+                    Forgot password?
+                </a>
+            </div>
+
+            <p-button
+                type="submit"
+                label="Sign In"
+                styleClass="w-full"
+                [loading]="loading()"
+            ></p-button>
+
+            <!-- <div class="text-center mt-4">
+                <span class="text-muted-color">Don't have an account?</span>
+                <a routerLink="/auth/register" class="font-medium ml-2 text-primary no-underline">Register</a>
+            </div> -->
+        </div>
+    </form>
+</app-auth-card>
