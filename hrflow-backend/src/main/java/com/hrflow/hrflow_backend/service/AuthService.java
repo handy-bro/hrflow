@@ -257,7 +257,8 @@ public class AuthService {
         } catch (DisabledException e) {
             throw new EmailNotVerifiedException("Please verify or activate your account before logging in");
         } catch (BadCredentialsException e) {
-            throw new BadCredentialsException("Invalid email or password");
+            log.info("Invalid username or password");
+            throw new InvalidUsernameOrPasswordException("Invalid email or password");
         }
 
         User user = userRepository.findByEmail(request.getEmail())

@@ -352,4 +352,17 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler({InvalidUsernameOrPasswordException.class})
+    public ResponseEntity<ErrorResponse> handleInvalidUsernameOrPasswordException(
+            InvalidUsernameOrPasswordException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.toString(),
+                ex.getCode(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI()
+        );
+
+        return new ResponseEntity<>(errorResponse, createJsonHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
 }

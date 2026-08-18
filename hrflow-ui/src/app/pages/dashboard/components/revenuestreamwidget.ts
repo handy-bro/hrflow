@@ -1,35 +1,41 @@
 import { afterNextRender, Component, effect, inject, signal } from '@angular/core';
 import { ChartModule } from 'primeng/chart';
 import { LayoutService } from '@/app/layout/service/layout.service';
+import { DashboardService } from '@/app/core/services/dashboard.service';
+import { WorkforceTrendEntry } from '@/app/core/dto/dashboard.dto';
 
 @Component({
     standalone: true,
     selector: 'app-revenue-stream-widget',
     imports: [ChartModule],
     template: `<div class="card mb-8!">
-        <div class="font-semibold text-xl mb-4">Revenue Stream</div>
-        <p-chart type="bar" [data]="chartData()" [options]="chartOptions()" class="h-100" />
+        <div class="font-semibold text-xl mb-4">Workforce Trend (12 months)</div>
+        <p-chart type="line" [data]="chartData()" [options]="chartOptions()" class="h-100" />
     </div>`
 })
 export class RevenueStreamWidget {
-    layoutService = inject(LayoutService);
+    private readonly layoutService = inject(LayoutService);
+    private readonly dashboardService = inject(DashboardService);
 
-    chartData = signal<any>(null);
-
-    chartOptions = signal<any>(null);
+    readonly chartData = signal<any>(null);
+    readonly chartOptions = signal<any>(null);
+    readonly trend = signal<WorkforceTrendEntry[]>([]);
 
     constructor() {
         afterNextRender(() => {
-            setTimeout(() => {
-                this.initChart();
-            }, 150);
+            setTimeout(() => this.initChart(), 150);
         });
 
         effect(() => {
             this.layoutService.layoutConfig().darkTheme;
-            setTimeout(() => {
-                this.initChart();
-            }, 150);
+            setTimeout(() => this.initChart(), 150);
+        });
+    }
+
+    ngOnInit(): void {
+        this.dashboardService.getWorkforceTrend().subscribe((data) => {
+            this.trend.set(data);
+            this.initChart();
         });
     }
 
@@ -39,36 +45,20 @@ export class RevenueStreamWidget {
         const borderColor = documentStyle.getPropertyValue('--surface-border');
         const textMutedColor = documentStyle.getPropertyValue('--text-color-secondary');
 
+        const labels = this.trend().map((entry) => `${entry.month}/${entry.year}`);
+        const values = this.trend().map((entry) => entry.activeEmployees);
+
         this.chartData.set({
-            labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+            labels,
             datasets: [
                 {
-                    type: 'bar',
-                    label: 'Subscriptions',
-                    backgroundColor: documentStyle.getPropertyValue('--p-primary-400'),
-                    data: [4000, 10000, 15000, 4000],
-                    barThickness: 32
-                },
-                {
-                    type: 'bar',
-                    label: 'Advertising',
-                    backgroundColor: documentStyle.getPropertyValue('--p-primary-300'),
-                    data: [2100, 8400, 2400, 7500],
-                    barThickness: 32
-                },
-                {
-                    type: 'bar',
-                    label: 'Affiliate',
-                    backgroundColor: documentStyle.getPropertyValue('--p-primary-200'),
-                    data: [4100, 5200, 3400, 7400],
-                    borderRadius: {
-                        topLeft: 8,
-                        topRight: 8,
-                        bottomLeft: 0,
-                        bottomRight: 0
-                    },
-                    borderSkipped: false,
-                    barThickness: 32
+                    type: 'line',
+                    label: 'Active Employees',
+                    borderColor: documentStyle.getPropertyValue('--p-primary-400'),
+                    backgroundColor: documentStyle.getPropertyValue('--p-primary-100'),
+                    data: values,
+                    fill: true,
+                    tension: 0.4
                 }
             ]
         });
@@ -85,7 +75,6 @@ export class RevenueStreamWidget {
             },
             scales: {
                 x: {
-                    stacked: true,
                     ticks: {
                         color: textMutedColor
                     },
@@ -95,7 +84,6 @@ export class RevenueStreamWidget {
                     }
                 },
                 y: {
-                    stacked: true,
                     ticks: {
                         color: textMutedColor
                     },
